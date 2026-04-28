@@ -181,7 +181,7 @@ def plot_on_image(image_pil, tgt, keypoint_skeleton,keypoint_text_prompt,output_
 
         sks = np.array(keypoint_skeleton)
         # import pdb;pdb.set_trace()
-        if sks !=[]:
+        if len(sks) > 0:
             if sks.min()==1:
                 sks = sks - 1
 

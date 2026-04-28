@@ -1,0 +1,6 @@
+__pycache__
+**/*.pyc
+weights
+models/UniPose/ops/build
+models/UniPose/ops/dist
+models/UniPose/ops/MultiScaleDeformableAttention.egg-info

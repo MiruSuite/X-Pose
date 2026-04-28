@@ -2,6 +2,60 @@
 <p align="center"> <img src="asset/unipose_logo.png" width="250px"> </p>
 <h2> X-Pose: Detecting Any Keypoints  </h2> 
 
+# Custom Windows Setup
+
+- Works with Python 3.9.
+- If the existing virtualenv points at a missing Python install, create a fresh
+  Python 3.9 environment:
+```powershell
+$env:UV_CACHE_DIR = "$PWD\.uv-cache"
+$env:UV_PYTHON_INSTALL_DIR = "$PWD\.uv-python"
+uv python install 3.9.13
+uv venv .venv39 --python 3.9.13
+uv pip install --python .venv39\Scripts\python.exe -r requirements.txt
+```
+- On Windows, reinstall Pytorch with CUDA after requirements installaion:
+```powershell
+uv pip install --python .venv39\Scripts\python.exe torch==1.12.1+cu116 torchvision==0.13.1+cu116 torchaudio==0.12.1 ninja --extra-index-url https://download.pytorch.org/whl/cu116
+```
+- The CUDA operators need the full NVIDIA CUDA Toolkit, not only the CUDA runtime
+  DLLs bundled with PyTorch. For `torch==1.12.1+cu116`, install CUDA Toolkit
+  11.6 and make sure `nvcc.exe` exists at:
+```text
+C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\bin\nvcc.exe
+```
+  With Chocolatey, run this from an Administrator shell:
+```powershell
+choco install cuda --version=11.6.2.51165 -y
+```
+- Configure `.env` for the local CUDA, Visual Studio, and Windows SDK paths.
+  The checked-in values work for this machine:
+```text
+CUDA_HOME=C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6
+CUDA_PATH=C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6
+XPOSE_VSDEVCMD_BAT=C:\PROGRA~2\MICROS~3\2019\BUILDT~1\Common7\Tools\VsDevCmd.bat
+XPOSE_CCBIN=C:\PROGRA~2\MICROS~3\2019\BUILDT~1\VC\Tools\MSVC\1429~1.301\bin\Hostx64\x64\cl.exe
+XPOSE_WINSDK_BIN=C:\PROGRA~2\WI3CF2~1\10\bin\10.0.22621.0\x64
+VSCMD_ARG_TGT_ARCH=x64
+DISTUTILS_USE_SDK=1
+```
+- Compile and install the CUDA operators from a normal PowerShell:
+```powershell
+.\scripts\build_unipose_ops.cmd
+```
+- Verify that the installed extension imports:
+```powershell
+$env:PATH = "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\bin;$env:PATH"
+.\.venv39\Scripts\python.exe -c "import torch; import MultiScaleDeformableAttention; print(torch.__version__, torch.version.cuda, torch.cuda.is_available()); print(MultiScaleDeformableAttention.__file__)"
+```
+- The upstream `models\UniPose\ops\test.py` can be run after the build, but on
+  an 8 GB GPU the full gradient suite may fail with CUDA out-of-memory after the
+  earlier forward and gradient checks pass.
+```powershell
+cd models\UniPose\ops
+..\..\..\.venv39\Scripts\python.exe test.py
+```
+
 
 [![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/unipose-detecting-any-keypoints/2d-human-pose-estimation-on-human-art)](https://paperswithcode.com/sota/2d-human-pose-estimation-on-human-art?p=unipose-detecting-any-keypoints)
 [![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/unipose-detecting-any-keypoints/2d-pose-estimation-on-animal-kingdom)](https://paperswithcode.com/sota/2d-pose-estimation-on-animal-kingdom?p=unipose-detecting-any-keypoints)
@@ -175,22 +229,22 @@ python app.py
 <br>
 </p>
 
-| Datasets                                                                                                                                                 | KPT     | Class | Images | Instances            | Unify Images  | Unify Instance |  
-|----------------------------------------------------------------------------------------------------------------------------------------------------------|---------|-------|--------|----------------------|---------------|----------------| 
-| [COCO](https://arxiv.org/abs/1911.07451)                                                                                                                 | 17      | 1     | 58,945| 156,165              | 58,945        | 156,165        | 
-| [300W-Face](https://ibug.doc.ic.ac.uk/resources/300-W/)                                                                                                  | 68      | 1     |  3,837| 4,437                | 3,837         | 4,437          | 
-| [OneHand10K](https://www.yangangwang.com/papers/WANG-MCC-2018-10.html)                                                                                   | 21      | 1     |11,703| 11,289               | 2,000         | 2000           | 
-| [Human-Art](https://github.com/IDEA-Research/HumanArt)                                                                                                   | 17      | 1     | 50,000| 123,131              | 50,000        | 123,131        |
-| [AP-10K](https://github.com/AlexTheBad/AP-10K)                                                                                                           | 17      | 54    | 10,015| 13,028               | 10,015        | 13,028         | 
-| [APT-36K](https://github.com/pandorgan/APT-36K)                                                                                                          | 17      | 30    | 36,000| 53,006               | 36,000        | 53,006         | 
-| [MacaquePose](http://www.pri.kyoto-u.ac.jp/datasets/macaquepose/index.html)                                                                              | 17      | 1     | 13,083| 16,393               | 2,000         | 2,320          |
-| [Animal Kingdom](https://openaccess.thecvf.com/content/CVPR2022/papers/Shi_End-to-End_Multi-Person_Pose_Estimation_With_Transformers_CVPR_2022_paper.pdf) | 23      | 850   | 33,099| 33,099               | 33,099        | 33,099         | 
-| [AnimalWeb](https://fdmaproject.wordpress.com/author/fdmaproject/)                                                                                       | 9       | 332   | 22,451 | 21,921               | 22,451        | 21,921         | 
-| [Vinegar Fly](https://github.com/jgraving/DeepPoseKit-Data)                                                                                              | 31      | 1     |1,500| 1,500                | 1,500         | 1,500          | 
-| [Desert Locust](https://github.com/jgraving/DeepPoseKit-Data)                                                                                            | 34      | 1     |  700| 700                  | 700           | 700            | 
-| [Keypoint-5](https://github.com/jiajunwu/3dinn)                                                                                                          | 55/31   | 5     | 8,649| 8,649                | 2,000         | 2,000          | 
-| [MP-100](https://github.com/luminxu/Pose-for-Everything)                                                                                                 | 561/293 | 100   | 16,943 | 18,000 | 16,943 | 18,000         | 
-| [UniKPT](https://drive.google.com/file/d/1ukLPbTpTfrCQvRY2jY52CgRi-xqvyIsP/view)                                                                       | 338     | 1237  | -      | -                    | 226,547       | 418,487        | 
+| Datasets                                                                                                                                                  | KPT     | Class | Images | Instances | Unify Images | Unify Instance |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----- | ------ | --------- | ------------ | -------------- |
+| [COCO](https://arxiv.org/abs/1911.07451)                                                                                                                  | 17      | 1     | 58,945 | 156,165   | 58,945       | 156,165        |
+| [300W-Face](https://ibug.doc.ic.ac.uk/resources/300-W/)                                                                                                   | 68      | 1     | 3,837  | 4,437     | 3,837        | 4,437          |
+| [OneHand10K](https://www.yangangwang.com/papers/WANG-MCC-2018-10.html)                                                                                    | 21      | 1     | 11,703 | 11,289    | 2,000        | 2000           |
+| [Human-Art](https://github.com/IDEA-Research/HumanArt)                                                                                                    | 17      | 1     | 50,000 | 123,131   | 50,000       | 123,131        |
+| [AP-10K](https://github.com/AlexTheBad/AP-10K)                                                                                                            | 17      | 54    | 10,015 | 13,028    | 10,015       | 13,028         |
+| [APT-36K](https://github.com/pandorgan/APT-36K)                                                                                                           | 17      | 30    | 36,000 | 53,006    | 36,000       | 53,006         |
+| [MacaquePose](http://www.pri.kyoto-u.ac.jp/datasets/macaquepose/index.html)                                                                               | 17      | 1     | 13,083 | 16,393    | 2,000        | 2,320          |
+| [Animal Kingdom](https://openaccess.thecvf.com/content/CVPR2022/papers/Shi_End-to-End_Multi-Person_Pose_Estimation_With_Transformers_CVPR_2022_paper.pdf) | 23      | 850   | 33,099 | 33,099    | 33,099       | 33,099         |
+| [AnimalWeb](https://fdmaproject.wordpress.com/author/fdmaproject/)                                                                                        | 9       | 332   | 22,451 | 21,921    | 22,451       | 21,921         |
+| [Vinegar Fly](https://github.com/jgraving/DeepPoseKit-Data)                                                                                               | 31      | 1     | 1,500  | 1,500     | 1,500        | 1,500          |
+| [Desert Locust](https://github.com/jgraving/DeepPoseKit-Data)                                                                                             | 34      | 1     | 700    | 700       | 700          | 700            |
+| [Keypoint-5](https://github.com/jiajunwu/3dinn)                                                                                                           | 55/31   | 5     | 8,649  | 8,649     | 2,000        | 2,000          |
+| [MP-100](https://github.com/luminxu/Pose-for-Everything)                                                                                                  | 561/293 | 100   | 16,943 | 18,000    | 16,943       | 18,000         |
+| [UniKPT](https://drive.google.com/file/d/1ukLPbTpTfrCQvRY2jY52CgRi-xqvyIsP/view)                                                                          | 338     | 1237  | -      | -         | 226,547      | 418,487        |
 
 
 

@@ -81,8 +81,9 @@ class Config(object):
         if filename.lower().endswith('.py'):
             with tempfile.TemporaryDirectory() as temp_config_dir:
                 temp_config_file = tempfile.NamedTemporaryFile(
-                    dir=temp_config_dir, suffix='.py')
+                    dir=temp_config_dir, suffix='.py', delete=False)
                 temp_config_name = osp.basename(temp_config_file.name)
+                temp_config_file.close()  # Close before copying
                 shutil.copyfile(filename,
                                 osp.join(temp_config_dir, temp_config_name))
                 temp_module_name = osp.splitext(temp_config_name)[0]
@@ -97,8 +98,6 @@ class Config(object):
                 }
                 # delete imported module
                 del sys.modules[temp_module_name]
-                # close temp file
-                temp_config_file.close()
         elif filename.lower().endswith(('.yml', '.yaml', '.json')):
             from .slio import slload
             cfg_dict = slload(filename)
